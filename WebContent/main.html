@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="euc-kr">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>기출문제풀어보기</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+	<script type="text/javascript">
+		var tn = 0;
+		var wan = 0;
+		var tnchk = 0;
+		var goo = 0;
+		var st = new Array();
+		var st2 = new Array();
+		function getYSMcode(){
+			$.getJSON("getYSMcode.do", { yosaSeme : $("#yosaSeme").val()}, function(data){
+				var str="<option value=''>학과 선택</option>";
+				for (var i=0; i < data.length; i++ ){
+					str  += "<option value='"+data[i].mcode+"'>"+data[i].mname+"</option>";
+				}
+				
+				$("#mcode").html(str);
+			});
+		}
+ 		function getYSScode(){
+
+			$.getJSON("getYSScode.do", {yosaSeme : $("#yosaSeme").val(), mcode : $("#mcode").val(), grade : $("#grade").val()}, function(data){
+				var str="<option value=''>과목 선택</option>";
+				for (var i=0; i < data.length; i++ ){
+					str  += "<option value='"+data[i].scode+"'>"+data[i].sname+"</option>";
+				}
+				
+				$("#scode").html(str);
+			});
+
+		} 
+		function rs() {
+			document.taCheck.reset();
+			for(var i = 1; i <= tn; i++) {
+				$('.' + i).css("color", "black");
+			}			 
+			$("#wan").html("");
+		}
+		function submitchk() {
+			wan = 0;
+			tnchk = 0;
+			var str = "";
+			st = new Array();
+			for(var i = 0; i < tn; i++) {
+				taChk(st2[i]);
+			}
+			if(wan == 0 && tnchk == tn) {
+				$("#wan").html("모두 정답!!");
+			}
+			else {
+				str += tn - tnchk + " 문제 남았습니다. / ";
+				str += wan + " 문제 틀렸습니다. / ";
+				str += "문제 번호 : ";
+				for(var i = 0; i < st.length; i++) {
+					if(i == st.length - 1) {
+						str += st[i];
+					}
+					else {
+						str += st[i] + ", ";
+					}
+				}
+				$("#wan").html(str);
+			}
+		}
+		
+		function taChk(i) {
+			$.ajax({
+				type:"POST",
+				url:"taCheck.do",
+				data:{scode : $('#scode').val(), tyear : $('#tyear').val(), tnum : i, ta : $('input[name="' + i + '"]:checked').val()},
+				async:false,
+				success:function(data){
+					if(data == 'wrong') {
+						st.push(parseInt(i) - goo);
+						$("." + i).css("color", "red");
+						wan++;
+						tnchk++;
+					}
+					else if(data == 'YES') {
+						$("." + i).css("color", "blue");
+						tnchk++;
+					}
+					
+				}
+				
+			});
+		}
+		function resize(obj) {
+			  obj.style.height = "1px";
+			  obj.style.height = (20+obj.scrollHeight)+"px";
+		}
+		function getTyear() {
+			if($('#yosaSeme').val() != '' && $('#mcode').val() != '' && $('#grade').val() != '' && $('#scode').val() != '') {
+				 
+				$.getJSON("getTyear.do", {scode : $('#scode').val()}, function(data){
+					var str = "<option value=''>기출년도선택</option>";
+					if(data != null) {
+						data.sort(function(a, b) {
+							return Number(a.tyear) < Number(b.tyear) ? -1 : Number(a.tyear) > Number(b.tyear) ? 1 : 0;
+						});
+						for(var i = 0; i < data.length; i++){
+							str += "<option value='" + data[i].tyear + "'>" + data[i].tyear + "년</option>";
+						}
+						$("#tyear").html(str);
+					}
+				});
+			}
+		}
+		function getT() {
+			if($('#yosaSeme').val() != '' && $('#mcode').val() != '' && $('#grade').val() != '' && $('#scode').val() != '' && $('#tyear').val() != '') {
+ 
+				$.getJSON("getT.do", {scode : $('#scode').val(), tyear : $('#tyear').val()}, function(data){
+					var str = "";
+					tn = 0;
+					goo = 0; 
+					$("#wan").html("");
+					st2 = new Array();
+					data.sort(function(a, b) {
+						return Number(a.tnum) < Number(b.tnum) ? -1 : Number(a.tnum) > Number(b.tnum) ? 1 : 0;
+					});
+					goo = parseInt(data[0].tnum) - 1;
+					for(var i = 0; i < data.length; i++){
+						st2.push(data[i].tnum);
+						var vtnum = parseInt(data[i].tnum) - goo;
+						if(data[i].outbsrc != null) {
+							var obc = data[i].outbcap.split(')');
+ 							var obc2 = obc[0].split('(');
+							var obcn = obc2[1];
+					 		var obcn2;
+							if(obcn.indexOf('～') != -1) {
+								obcn2 = obcn.split('～');
+							}
+							else if(obcn.indexOf('∼') != -1) {
+								obcn2 = obcn.split('∼');
+							}
+							else if(obcn.indexOf('~') != -1) {
+								obcn2 = obcn.split('~');
+							}
+					 		var obcnl = parseInt(obcn2[0]);
+							var obcnr = parseInt(obcn2[1]); 
+							var gap = obcnr - obcnl;
+							var tnumr = vtnum + gap;
+							str += "<br>※ (";
+							str += vtnum + "～" + tnumr + ") ";
+						 	for(var j = 1; j < obc.length; j++) {
+								str += obc[j];
+								if(j != obc.length - 1) {
+									str += ")";
+								}
+							}   
+							str += "<br>";
+							str += "<img src='" + data[i].outbsrc + "'><br>";
+						}
+						str += "<br><span class='" + data[i].tnum + "'>" + vtnum + ". " + data[i].tq + "</span><br>";
+						if(data[i].inbsrc != null) {
+							str += "<img src='" + data[i].inbsrc + "'><br>";
+						}
+						str += "<label><input type='radio' name='" + data[i].tnum + "' value='1'><span class='" + data[i].tnum + "'> " + data[i].b1 + "</span></label><br>";
+						str += "<label><input type='radio' name='" + data[i].tnum + "' value='2'><span class='" + data[i].tnum + "'> " + data[i].b2 + "</span></label><br>";
+						str += "<label><input type='radio' name='" + data[i].tnum + "' value='3'><span class='" + data[i].tnum + "'> " + data[i].b3 + "</span></label><br>";
+						str += "<label><input type='radio' name='" + data[i].tnum + "' value='4'><span class='" + data[i].tnum + "'> " + data[i].b4 + "</span></label><br>";
+						tn++;
+					}
+					$("#ptest").html(str);
+					
+				});
+			}
+		}
+
+	</script>
+	<style type="text/css">
+	#header {
+		background-color: white;
+	}
+	#container {
+		line-height: 40px;
+		height: 40px;
+	}
+	.footer {
+		position: fixed;
+		bottom: 0;
+		width: 100%;
+		height: 40px;
+		background-color: white;
+		line-height: 40px;
+	}
+	label {
+	    font-weight: normal !important;
+	}
+	.btngrp{
+		vertical-align: middle;
+	}
+	body {
+		padding-top: 140px;
+	}
+	</style>
+</head>
+<body>
+	<div id="header" class="navbar-fixed-top">
+		<div class="col-lg-10 col-lg-offset-1">
+			<p><ul class="nav nav-tabs nav-justified">
+				<li role="presentation"><a href="index.html">HOME</a></li>
+				<li role="presentation" class="active"><a href="main.html">기출문제풀어보기</a></li>
+				<li role="presentation"><a href="majorInsert.html">학과입력</a></li>
+				<li role="presentation"><a href="subjInsert.html">과목입력</a></li>
+				<li role="presentation"><a href="oMInsert.html">개설학과입력</a></li>
+				<li role="presentation"><a href="oSInsert.html">개설과목입력</a></li>
+				<li role="presentation"><a href="testInsert.html">기출문제입력</a></li>
+				<li role="presentation"><a href="bInsert.html">보기입력</a></li>
+				<li role="presentation"><a href="tAInsert.html">정답입력</a></li>
+			</ul></p>
+			<h3>2016학년 1학기, 컴퓨터과학과, 1학년, C프로그래밍 선택하시면 기출문제 2개 년도 중 하나를 선택하여 풀어볼 수 있습니다.</h3>
+			<div id="container">
+				<div class="btngrp">
+					<div class="col-lg-2">
+						<select name="yosaSeme" id="yosaSeme" class="form-control" onchange="getYSMcode(), getTyear()">
+							<option value="">개설학년, 학과 선택</option>
+							<option value="20152">2015학년 2학기</option>
+							<option value="20161">2016학년 1학기</option>
+						</select>
+					</div>
+					<div class="col-lg-3">
+						<select name="mcode" id="mcode" class="form-control" onchange="getYSScode(), getTyear()">
+							<option value=''>학과 선택</option>
+						</select>
+					</div>
+					<div class="col-lg-1">
+						<select name="grade" id="grade" class="form-control" onchange="getYSScode(), getTyear()">
+							<option value=''>학년</option>
+							<option value='1'>1학년</option>
+						<!--<option value='2'>2학년</option>
+							<option value='3'>3학년</option>
+							<option value='4'>4학년</option>-->
+						</select>
+					</div>
+					<div class="col-lg-3">
+						<select name="scode" id="scode" class="form-control" onchange="getTyear()">
+							<option value=''>과목 선택</option>
+						</select>
+					</div>
+					<div class="col-lg-2">
+						<select name="tyear" id="tyear" class="form-control" onchange="getT()">
+							<option value=''>기출년도선택</option>
+						</select>
+					</div>				
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-lg-10 col-lg-offset-1" id="contents">
+		<br>
+		<div>
+			<form name='taCheck' action='taCheck.do' method='post'>
+				<div id='ptest' style='padding-bottom: 50px'>
+				</div>
+			</form>
+		</div>
+	</div>
+	<div class="col-lg-12 footer">
+		<div class="col-lg-10 col-lg-offset-1 btngrp">
+			<input type="button" value="정답확인" class="btn btn-primary" onclick="submitchk()">
+			<input type="button" value="초기화" class="btn btn-primary" onclick="rs()">
+			<span id='wan'></span>
+		</div>
+	</div>
+</body>
+</html>

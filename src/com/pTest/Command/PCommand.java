@@ -1,0 +1,8 @@
+package com.pTest.Command;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+public interface PCommand {
+	void execute(HttpServletRequest request, HttpServletResponse response);
+}

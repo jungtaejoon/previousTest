@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="euc-kr">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>학과입력페이지</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+	<script type="text/javascript">
+		
+		$(function(){
+			$('#mcode').blur(function() {
+				
+				$.ajax({
+					type:"POST",
+					url:"mcodeCheck.do",
+					data:{
+						"mcode":$('#mcode').val()
+					},
+					success:function(data){
+						
+						if(data == "YES" && $('#mcode').val().length == 2){
+							$('#mchk').removeClass("glyphicon glyphicon-remove form-control-feedback");
+							$('#mchk').addClass("glyphicon glyphicon-ok form-control-feedback");
+						}
+						else if(data == ''){
+							$('#mchk').removeClass("glyphicon glyphicon-ok form-control-feedback");
+							$('#mchk').removeClass("glyphicon glyphicon-remove form-control-feedback");
+						}
+						else {
+							$('#mchk').removeClass("glyphicon glyphicon-ok form-control-feedback");
+							$('#mchk').addClass("glyphicon glyphicon-remove form-control-feedback");
+						}	
+					}
+				});
+				
+			});
+		});
+		
+		function submitChk() {
+			$.ajax({
+				type:"POST",
+				url:"mcodeCheck.do",
+				data:{
+					"mcode":$('#mcode').val()
+				},
+				success:function(data){
+					
+					if(data == "NO"){
+						alert('해당 학과코드가 이미 존재합니다.');
+					}
+					else if($('#mcode').val() == "") {
+						alert('학과 코드를 입력하세요.');
+					}
+					else if($('#mcode').val().length < 2) {
+						alert('학과 코드는 2자리로 입력하세요');
+					}
+					else if($('#mname').val() == "") {
+						alert('학과명을 입력하세요.');
+					}
+					else document.PMIForm.submit();
+				}
+			});
+		}
+	</script>
+</head>
+<body>
+	<div class="col-lg-10 col-lg-offset-1">
+		<p>
+			<ul class="nav nav-tabs nav-justified">
+				<li role="presentation"><a href="index.html">HOME</a></li>
+				<li role="presentation"><a href="main.html">기출문제풀어보기</a></li>
+				<li role="presentation" class="active"><a href="majorInsert.html">학과입력</a></li>
+				<li role="presentation"><a href="subjInsert.html">과목입력</a></li>
+				<li role="presentation"><a href="oMInsert.html">개설학과입력</a></li>
+				<li role="presentation"><a href="oSInsert.html">개설과목입력</a></li>
+				<li role="presentation"><a href="testInsert.html">기출문제입력</a></li>
+				<li role="presentation"><a href="bInsert.html">보기입력</a></li>
+				<li role="presentation"><a href="tAInsert.html">정답입력</a></li>
+			</ul>
+		</p>
+	</div>
+	<div class="col-lg-10 col-lg-offset-1">
+		<form name="PMIForm" action="pMInsert.do" method="post">
+			<div class="col-lg-2">
+				<div class="form-group has-success has-feedback">
+					<label for="mcode">학과코드 입력(2자리)</label>
+					<input type="text" name="mcode" id="mcode" maxlength="2" class='form-control' placeholder="ex) 01">
+					<span id="mchk"></span>
+				</div>
+			</div>
+			<div class="col-lg-6">
+				<div  class="form-group">
+					<label for="mname">학과명 입력(최대 20글자)</label>
+					<input type="text" name="mname" id="mname" maxlength="20" class='form-control' placeholder="ex) 컴퓨터과학과"><span id="te"></span>
+				</div>
+			</div>
+			<div class="form-group col-lg-6">
+				<input type="button" value="입력" onclick="submitChk()" class="btn btn-primary">
+				<input type="reset" value="초기화" class="btn btn-primary">
+			</div>
+			
+		</form>
+	</div>
+
+</body>
+</html>

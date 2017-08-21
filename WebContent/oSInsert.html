@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="euc-kr">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>개설과목입력</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+	<script type="text/javascript">
+		var n = 1;
+		var x = 0;
+		var formName = "oSIForm";
+		var formAction = "oSInsert.do";
+		function makeForm() {
+			var str1 = "<form action='" + formAction + "' method='post'>";
+			str1 += "<table class='table table-striped table-bordered'>";
+			str1 += "<tr>";
+			str1 += "<th>";
+			str1 += "<div>";
+			str1 += "<select name='yosaSeme' id='yosaSeme" + String(n) + "' onchange='getYSMcode(" + n + ")' class='form-control'>";
+			str1 += "<option value=''>개설 학년 학기</option>";
+			str1 += "<option value='20152'>2015학년 2학기</option>";
+			str1 += "<option value='20161'>2016학년 1학기</option></select></div></th>";
+			str1 += "<th>";
+			str1 += "<div>";
+			str1 += " <select name='mcode' id='mcode" + String(n) + "' class='form-control'>";
+			str1 += "<option value=''>개설 학과</select></div></th>";
+			str1 += "<th>";
+			str1 += "<div>";
+			str1 += " <select name='grade' id='grade' class='form-control'>";
+			str1 += "<option value=''>학년</option>";
+			str1 += "<option value='1'>1학년</option>";
+			str1 += "<option value='2'>2학년</option>";
+			str1 += "<option value='3'>3학년</option>";
+			str1 += "<option value='4'>4학년</option></select></div></th>";
+			str1 += "<th>";
+			str1 += " <input type='button' value='과목코드입력란추가' class='btn btn-default' onclick='mkSin(" + n + ")'></th></tr></form>";
+			str1 += "<tr>";
+			str1 += "<td colspan='4'>";
+			str1 += "<div id='mkcul" + String(n) + "'>";
+			str1 += "<div class='col-lg-2'>";
+			str1 += "<div class='form-group has-success has-feedback'>";
+			str1 += "<input type='text' name='scode' id='scode" + String(x) + "' maxlength='5' onkeyup='scodechk(this.id)' class='form-control' placeholder='과목코드 ex) 00500'><span id='schk" + String(x) + "'></span></div></div></div></td></tr>";
+			str1 += "</table>";
+			str1 += "</form>";
+			$("#mkform").append(str1);
+			++x;
+			++n;
+		}
+		function mkSin(n) {
+
+			var str2 = "<div class='col-lg-2'>";
+			str2 += "<div class='form-group has-success has-feedback'>";
+			str2 += "<input type='text' name='scode' id='scode" + String(x) + "' maxlength='5' onkeyup='scodechk(this.id)' class='form-control' placeholder='과목코드 ex) 00500'><span id='schk" + String(x) + "'></span></div></div>";
+
+			$("#mkcul" + String(n)).append(str2);
+			++x;
+		}
+		function scodechk(x){
+			$.ajax({
+				type:"POST",
+				url:"scodeCheck.do",
+				data:{
+					"scode":$('#' + x).val()
+				},
+				success:function(data){
+					str = data;
+					if(data == "NO" && $('#' + x).val().length == 5){
+						$('#schk' + x.substring(5)).removeClass("glyphicon glyphicon-remove form-control-feedback");
+						$('#schk' + x.substring(5)).addClass("glyphicon glyphicon-ok form-control-feedback");
+					}
+					else if(data == ''){
+						$('#schk' + x.substring(5)).removeClass("glyphicon glyphicon-ok form-control-feedback");
+						$('#schk' + x.substring(5)).removeClass("glyphicon glyphicon-remove form-control-feedback");
+					}
+					else {
+						$('#schk' + x.substring(5)).removeClass("glyphicon glyphicon-ok form-control-feedback");
+						$('#schk' + x.substring(5)).addClass("glyphicon glyphicon-remove form-control-feedback");
+					}
+				}
+			});
+		};
+		function getYSMcode(n){
+			$.getJSON("getYSMcode.do", { yosaSeme : $("#yosaSeme" + String(n)).val()}, function(data){
+				var str="<option value=''>개설 학과</option>";
+				for (var i=0; i < data.length; i++ ){
+					str  += "<option value='"+data[i].mcode+"'>"+data[i].mname+"</option>";
+				}
+				
+				$("#mcode" + String(n)).html(str);
+			});
+		}
+		function rs() {
+			for(var i = 0; i < document.forms.length; i++) {
+				 document.forms[i].reset();
+			 }
+		}
+		
+		function submitChk() {
+			 for(var i = 0; i < document.forms.length; i++) {
+				 document.forms[i].submit();
+			 }
+		}	
+
+	</script>
+</head>
+<body onload="makeForm(), getYSMcode()">
+	<div class="col-lg-10 col-lg-offset-1">
+		<p><ul class="nav nav-tabs nav-justified">
+			<li role="presentation"><a href="index.html">HOME</a></li>
+			<li role="presentation"><a href="main.html">기출문제풀어보기</a></li>
+			<li role="presentation"><a href="majorInsert.html">학과입력</a></li>
+			<li role="presentation"><a href="subjInsert.html">과목입력</a></li>
+			<li role="presentation"><a href="oMInsert.html">개설학과입력</a></li>
+			<li role="presentation" class="active"><a href="oSInsert.html">개설과목입력</a></li>
+			<li role="presentation"><a href="testInsert.html">기출문제입력</a></li>
+			<li role="presentation"><a href="bInsert.html">보기입력</a></li>
+			<li role="presentation"><a href="tAInsert.html">정답입력</a></li>
+		</ul></p>
+	</div>
+	<div class="col-lg-10 col-lg-offset-1">
+		<div id="mkform"></div><input type="button" value="폼 추가" onclick="makeForm()" class='btn btn-default'><br><br><br>
+		<input type="button" value="입력" onclick="submitChk()" class='btn btn-primary'> <input type="button" value="초기화" onclick="rs()" class='btn btn-primary'>
+	</div>
+</body>
+</html>

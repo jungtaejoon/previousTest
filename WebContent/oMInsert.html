@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="euc-kr">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>개설학과입력</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+	<script type="text/javascript">
+		function getMcode(){
+			$.getJSON("getMcode.do", function(data){
+				var str="<option value=''>학과 선택</option>";
+				for (var i=0; i < data.length; i++ ){
+					str  += "<option value='"+data[i].mcode+"'>"+data[i].mname+"</option>";
+				}
+				
+				$("#mcode").html(str);
+			});
+		}
+		function submitChk() {
+			$.ajax({
+				type:"POST",
+				url:"oMCheck.do",
+				data:{
+					"yosaSeme":$('#yosaSeme').val(), "mcode":$('#mcode').val()
+				},
+				success:function(data){
+					
+					if(data == "NO"){
+						alert('이미 입력한 데이터입니다.');
+					}
+					else if($('#mcode').val() == "") {
+						alert('학과를 선택하세요.');
+					}
+					else document.oMIForm.submit();
+				}
+			});
+		}	
+
+	</script>
+</head>
+<body onload="getMcode()">
+	<div class="col-lg-10 col-lg-offset-1">
+	<p><ul class="nav nav-tabs nav-justified">
+		<li role="presentation"><a href="index.html">HOME</a></li>
+		<li role="presentation"><a href="main.html">기출문제풀어보기</a></li>
+		<li role="presentation"><a href="majorInsert.html">학과입력</a></li>
+		<li role="presentation"><a href="subjInsert.html">과목입력</a></li>
+		<li role="presentation" class="active"><a href="oMInsert.html">개설학과입력</a></li>
+		<li role="presentation"><a href="oSInsert.html">개설과목입력</a></li>
+		<li role="presentation"><a href="testInsert.html">기출문제입력</a></li>
+		<li role="presentation"><a href="bInsert.html">보기입력</a></li>
+		<li role="presentation"><a href="tAInsert.html">정답입력</a></li>
+	</ul></p></div>
+	<div class="col-lg-10 col-lg-offset-1">
+		<form name="oMIForm" action="oMInsert.do" method="post">
+			<div class="col-lg-2">
+				<div class="form-group has-success has-feedback">
+					<label for="yosaSeme">개설학년학기 입력(5자리)</label>
+					<input type="text" name="yosaSeme" id="yosaSeme" maxlength="5" class='form-control' placeholder="ex) 2006년도 1학기 : 20061"> 
+				</div>
+			</div>
+			<div class="col-lg-6">
+				<div class="form-group">
+					<label for="mcode">학과선택</label>
+					<select name="mcode" id="mcode" class='form-control'>
+					</select>
+				</div>
+			</div>
+			<div class="form-group col-lg-6">
+				<input type="button" value="입력" onclick="submitChk()" class="btn btn-primary">
+				<input type="reset" value="초기화" class="btn btn-primary">
+			</div>
+		</form>
+	</div>
+</body>
+</html>

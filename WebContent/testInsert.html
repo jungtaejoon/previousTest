@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="euc-kr">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>기출문제입력</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+	<script type="text/javascript">
+		var ta;
+		var ti = 0;
+		var strfs = "";
+		
+		String.prototype.trim = function() {
+		    return this.replace(/(^\s*)|(\s*$)/gi, "");
+		}
+		
+		function getYSMcode(){
+			$.getJSON("getYSMcode.do", { yosaSeme : $("#yosaSeme").val()}, function(data){
+				var str="<option value=''>학과 선택</option>";
+				for (var i=0; i < data.length; i++ ){
+					str  += "<option value='"+data[i].mcode+"'>"+data[i].mname+"</option>";
+				}
+				
+				$("#mcode").html(str);
+			});
+		}
+ 		function getYSScode(){
+
+			$.getJSON("getYSScode.do", {yosaSeme : $("#yosaSeme").val(), mcode : $("#mcode").val(), grade : $("#grade").val()}, function(data){
+				var str="<option value=''>과목 선택</option>";
+				for (var i=0; i < data.length; i++ ){
+					str  += "<option value='"+data[i].scode+"'>"+data[i].sname+"</option>";
+				}
+				
+				$("#scode").html(str);
+			});
+
+		} 
+		function rs() {
+			for(var i = 0; i < document.forms.length; i++) {
+				 document.forms[i].reset();
+					$("#ttable").html("");
+			}
+		}
+		
+		function submitChk() {
+			 for(var i = 0; i < document.forms.length; i++) {
+			 	 document.forms[i].submit();
+			 }
+				
+		}
+		function tSplit() {
+			ti = 0;
+			var arrT = new Array();
+			var arrObcs = new Array();
+			var strs = new Array;
+			ta = $('#ta').val();
+			st();
+			var str = ta.split('\n');
+			var str2 = "";
+			for(var i = 0; i < str.length; i++) {
+				if(str[i].substring(0, 3) == "※ (" || str[i].substring(0, 2) == "※(") {
+					arrObcs.push(str[i]);
+				}
+		 		if(str[i].substring(1, 2) == "." && str[i].substring(2, 3) == " " || str[i].substring(2, 3) == "." && str[i].substring(3, 4) == " ") {
+					strs.push(str2);
+					str2 = str[i] + "\n";
+				}
+				else str2 += str[i] + "\n";
+			}
+			strs.push(str2);
+			for(var i = 0; i < strs.length; i++) {
+				if(strs[i].substring(1, 2) == "." && strs[i].substring(2, 3) == " " || strs[i].substring(2, 3) == "." && strs[i].substring(3, 4) == " ") {
+					var str3 = strs[i].split('\n');
+			 		var str4 = str3[0].split('.');
+					var strtn = str4[0];
+					var strtq = "";
+					for(var j = 1; j < str4.length; j++) {
+						strtq += str4[j];
+						if(j < str4.length - 1) {
+							strtq += '.';
+						}
+					}
+					strtq = strtq;
+ 					var b1n = 0;
+					var b4n = 0;
+								
+					for(var j = 0; j < str3.length; j++) {
+						if(str3[j].indexOf('①') != -1) {
+							b1n = j;
+						}
+						if(str3[j].indexOf('④') != -1) {
+							b4n = j;
+						}
+					}
+					
+					var ichk = "no";
+					if(b1n > 1) ichk = "yes";
+					
+				 	var ba = "";
+					for(var j = b1n; j <= b4n; j++) {
+						ba += str3[j];
+					} 
+					var strb1 = ba.split('①')[1].split('②')[0];
+					var strb2 = ba.split('②')[1].split('③')[0];
+					var strb3 = ba.split('③')[1].split('④')[0];
+					var strb4 = ba.split('④')[1]; 
+					var obc = "";
+					for(var j = 0; j < arrObcs.length; j++) {
+						var obcn2;
+						var obcnl;
+						if(arrObcs[j].indexOf('～') != -1) {
+							obcn2 = arrObcs[j].split('～');
+						}
+						else if(arrObcs[j].indexOf('∼') != -1) {
+							obcn2 = arrObcs[j].split('∼');
+						}
+						else if(arrObcs[j].indexOf('~') != -1) {
+							obcn2 = arrObcs[j].split('~');
+						}
+				 		obcnl = obcn2[0].split("(")[1];
+				 		
+				 		if(String(obcnl) == strtn.trim()) {
+				 			obc = arrObcs[j];
+				 		}
+					}
+					arrT.push({tnum:strtn.trim(), tq:strtq.trim(), b1:strb1.trim(), b2:strb2.trim(), b3:strb3.trim(), b4:strb4.trim(), outbcap:obc.trim(), ichk:ichk});
+				}
+				
+			}
+			arrT.sort(function(a, b) {
+				return Number(a.tnum) < Number(b.tnum) ? -1 : Number(a.tnum) > Number(b.tnum) ? 1 : 0;
+			});
+			for(var i = 0; i < arrT.length; i++) {
+				st2(arrT[i].tnum, arrT[i].tq, arrT[i].b1, arrT[i].b2, arrT[i].b3, arrT[i].b4);
+				if(arrT[i].outbcap != null && arrT[i].outbcap != "" && arrT[i].ichk == "yes") mktableobib(arrT[i].tnum, arrT[i].outbcap);
+				else if(arrT[i].outbcap != null && arrT[i].outbcap != "") mktableob(arrT[i].tnum, arrT[i].outbcap); 
+				else if(arrT[i].ichk == "yes") mktableib(arrT[i].tnum);
+				else mktable(arrT[i].tnum);
+				
+				ti++;				
+			}
+			$("#ttable").html(strfs);
+			setBtnlo2();
+		}
+		function resize(obj) {
+			  obj.style.height = "1px";
+			  obj.style.height = (20+obj.scrollHeight)+"px";
+		}
+		function getTyear() {
+			var d = new Date();
+			for(var i = d.getFullYear(); i >= 1990; i--) {
+				$("#tyear").append("<option value='" + i + "'>" + i + "년</option>");
+			}
+		}
+		function st() {
+			$("#ttable").html("");
+			strfs = "<tr>";
+			strfs += "<th class='text-center' style='vertical-align:middle'>번호</th>";
+			strfs += "<th class='text-center' style='vertical-align:middle'>문제</th>";
+			strfs += "<th class='text-center' style='vertical-align:middle'>보기1</th>";
+			strfs += "<th class='text-center' style='vertical-align:middle'>보기2</th>";
+			strfs += "<th class='text-center' style='vertical-align:middle'>보기3</th>";
+			strfs += "<th class='text-center' style='vertical-align:middle'>보기4</th>";
+			strfs += "<th class='text-center' style='vertical-align:middle'>외부보기시작</th>";
+			strfs += "<th class='text-center' style='vertical-align:middle'>외부보기캡션</th>";
+			strfs += "<th class='text-center' style='vertical-align:middle'>내부보기</th>";
+			strfs += "<th class='text-center' style='vertical-align:middle'>행삭제</th>";
+			strfs += "</tr>";
+		}
+		function st2(tnum, tq, b1, b2, b3, b4) {
+			strfs += "<tr>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<input type='text' maxlength='2' size='2' name='tnum' id='tn" + ti + "' onkeyup='reval(this.id)' value='" + tnum + "' class='form-control'>";
+			strfs += "</td>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<textarea name='tq' maxlength='100' onkeyup='resize(this)' class='form-control'>" + tq + "</textarea>";
+			strfs += "</td>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<textarea name='b1' maxlength='100' onkeyup='resize(this)' class='form-control'>" + b1 + "</textarea>";
+			strfs += "</td>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<textarea name='b2' maxlength='100' onkeyup='resize(this)' class='form-control'>" + b2 + "</textarea>";
+			strfs += "</td>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<textarea name='b3' maxlength='100' onkeyup='resize(this)' class='form-control'>" + b3 + "</textarea>";
+			strfs += "</td>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<textarea name='b4' maxlength='100' onkeyup='resize(this)' class='form-control'>" + b4 + "</textarea>";
+			strfs += "</td>";
+			
+		}
+		function nst2() {
+			strfs = "<tr>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<input type='text' maxlength='2' size='2' name='tnum' id='tn" + ti + "' onkeyup='reval(this.id)' class='form-control'>";
+			strfs += "</td>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<textarea name='tq' maxlength='100' onkeyup='resize(this)' class='form-control'></textarea>";
+			strfs += "</td>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<textarea name='b1' maxlength='100' onkeyup='resize(this)' class='form-control'></textarea>";
+			strfs += "</td>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<textarea name='b2' maxlength='100' onkeyup='resize(this)' class='form-control'></textarea>";
+			strfs += "</td>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<textarea name='b3' maxlength='100' onkeyup='resize(this)' class='form-control'></textarea>";
+			strfs += "</td>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<textarea name='b4' maxlength='100' onkeyup='resize(this)' class='form-control'></textarea>";
+			strfs += "</td>";
+			
+		}
+		function nmktable() {
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<input type='checkbox' name='outbsn' id='on" + ti + "' class='form-control'>";
+			strfs += "</td>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<textarea name='outbcap' id='oc" + ti + "' maxlength='100' onkeyup='resize(this)' class='form-control'></textarea>";
+			strfs += "</td>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<input type='checkbox' name='inbn' id='in" + ti + "' class='form-control'>";
+			strfs += "</td>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<input type='button' onclick='rLine(this)' value='삭제' class='btn btn-danger'>";
+			strfs += "</td>";
+			strfs += "</tr>";
+			
+		}
+		
+		function mktable(tnum) {
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<input type='checkbox' name='outbsn' id='on" + ti + "' value='" + tnum + "' class='form-control'>";
+			strfs += "</td>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<textarea name='outbcap" + tnum + "' id='oc" + ti + "' maxlength='100' onkeyup='resize(this)' class='form-control'></textarea>";
+			strfs += "</td>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<input type='checkbox' name='inbn' id='in" + ti + "' value='" + tnum + "' class='form-control'>";
+			strfs += "</td>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<input type='button' onclick='rLine(this)' value='삭제' class='btn btn-danger'>";
+			strfs += "</td>";
+			strfs += "</tr>";
+			
+		}
+		function mktableob(tnum, outbcap) {
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<input type='checkbox' name='outbsn' id='on" + ti + "' value='" + tnum + "' checked='checked' class='form-control'>";
+			strfs += "</td>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<textarea name='outbcap" + tnum + "' id='oc" + ti + "' maxlength='100' onkeyup='resize(this)' class='form-control'>" + outbcap + "</textarea>";
+			strfs += "</td>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<input type='checkbox' name='inbn' id='in" + ti + "' value='" + tnum + "' class='form-control'>";
+			strfs += "</td>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<input type='button' onclick='rLine(this)' value='삭제' class='btn btn-danger'>";
+			strfs += "</td>";
+			strfs += "</tr>";
+			
+		}
+		function mktableib(tnum) {
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<input type='checkbox' name='outbsn' id='on" + ti + "' value='" + tnum + "' class='form-control'>";
+			strfs += "</td>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<textarea name='outbcap" + tnum + "' id='oc" + ti + "' maxlength='100' onkeyup='resize(this)' class='form-control'></textarea>";
+			strfs += "</td>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<input type='checkbox' name='inbn' id='in" + ti + "' value='" + tnum + "' checked='checked' class='form-control'>";
+			strfs += "</td>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<input type='button' onclick='rLine(this)' value='삭제' class='btn btn-danger'>";
+			strfs += "</td>";
+			strfs += "</tr>";
+			
+		}
+		function mktableobib(tnum, outbcap) {
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<input type='checkbox' name='outbsn' id='on" + ti + "' value='" + tnum + "' checked='checked' class='form-control'>";
+			strfs += "</td>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<textarea name='outbcap" + tnum + "' id='oc" + ti + "' maxlength='100' onkeyup='resize(this)' class='form-control'>" + outbcap + "</textarea>";
+			strfs += "</td>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<input type='checkbox' name='inbn' id='in" + ti + "' value='" + tnum + "' checked='checked' class='form-control'>";
+			strfs += "</td>";
+			strfs += "<td class='text-center' style='vertical-align:middle'>";
+			strfs += "<input type='button' onclick='rLine(this)' value='삭제' class='btn btn-danger'>";
+			strfs += "</td>";
+			strfs += "</tr>";
+			
+		}
+		function setTable() {
+			if($('#yosaSeme').val() != '' && $('#mcode').val() != '' && $('#grade').val() != '' && $('#scode').val() != '' && $('#tyear').val() != '') {
+				$.ajax({
+					type:"POST",
+					url:"tCheck.do",
+					data:{
+						scode : $('#scode').val(), tyear : $('#tyear').val()
+					},
+					success:function(data){
+						if(data == 'YES') {
+							$.getJSON("setT.do", {scode : $('#scode').val(), tyear : $('#tyear').val()}, function(data){
+								data.sort(function(a, b) {
+									return Number(a.tnum) < Number(b.tnum) ? -1 : Number(a.tnum) > Number(b.tnum) ? 1 : 0;
+								});
+								ti = 0;
+								st();
+								for(var i = 0; i < data.length; i++) {
+									st2(data[i].tnum, data[i].tq, data[i].b1, data[i].b2, data[i].b3, data[i].b4);
+									if(data[i].outbsn != null && data[i].outbsn != "" && data[i].inbn != null && data[i].inbn != "") mktableobib(data[i].tnum, data[i].outbcap);
+									else if(data[i].outbsn != null && data[i].outbsn != "") mktableob(data[i].tnum, data[i].outbcap); 
+									else if(data[i].inbn != null && data[i].inbn != "") mktableib(data[i].tnum);
+									else mktable(data[i].tnum);
+									ti++;				
+								}
+								$("#ttable").html(strfs);
+								setBtnlo3();
+							});
+						}
+						else {
+							$("#ttable").html("<tr><td><textarea name='ta' id='ta' onkeyup='resize(this)' class='form-control'></textarea></td></tr>");
+							setBtnlo();
+						}
+					}
+				})
+			}
+			else $("#ttable").html("");
+		}
+		function mkrow() {
+			nst2();
+			nmktable();
+			ti++;
+			$("#ttable").append(strfs);
+		}
+		function setBtnlo() {
+			var str = "<input type='button' value='기출문제분석' onclick='tSplit()' class='btn btn-primary'> ";
+			str += "<input type='button' value='초기화' onclick='rs()' class='btn btn-primary'>";
+			$("#btnlo").html(str);
+		}
+		function setBtnlo2() {
+			var str = "<input type='button' value='입력' onclick='submitChk()' class='btn btn-primary'> ";
+			str += "<input type='button' value='전 단계로' onclick='goback()' class='btn btn-primary'> ";
+			str += "<input type='button' value='행 추가' onclick='mkrow()' class='btn btn-default'>";
+			$("#btnlo").html(str);
+		}
+		function setBtnlo3() {
+			var str = "<input type='button' value='수정' onclick='submitChk()' class='btn btn-primary'> ";
+			str += "<input type='button' value='기출문제분석화면' onclick='goback()' class='btn btn-primary'> ";
+			str += "<input type='button' value='행 추가' onclick='mkrow()' class='btn btn-default'>";
+			$("#btnlo").html(str);
+		}
+		function goback() {
+			$("#ttable").html("<tr><td><textarea name='ta' id='ta' onkeyup='resize(this)' class='form-control'>" + ta + "</textarea></td></tr>");
+			setBtnlo();
+		}
+		function reval(x) {
+			$('#on' + x.substring(2)).attr('value', $('#' + x).val());
+			$('#in' + x.substring(2)).attr('value', $('#' + x).val());
+			$('#oc' + x.substring(2)).attr('name', 'outbcap' + $('#' + x).val());
+		}
+		function rLine(obj) {
+		    var tr = $(obj).parent().parent();
+		    tr.remove();
+		}
+	</script>
+	<style type="text/css">
+	#ttable {
+		margin-bottom: 70px;
+	}
+	.footer {
+		position: fixed;
+		bottom: 0;
+		width: 100%;
+		height: 40px;
+		background-color: white;
+		line-height: 40px;
+	}
+	label {
+	    font-weight: normal !important;
+	}
+	.btngrp{
+		vertical-align: middle;
+	}
+	body { padding-bottom: 200; }
+	textarea {width:200px;overflow:visible;}
+	</style>
+</head>
+<body onload="getTyear(), setBtnlo()">
+	<div class="col-lg-10 col-lg-offset-1">
+		<p><ul class="nav nav-tabs nav-justified">
+			<li role="presentation"><a href="index.html">HOME</a></li>
+			<li role="presentation"><a href="main.html">기출문제풀어보기</a></li>
+			<li role="presentation"><a href="majorInsert.html">학과입력</a></li>
+			<li role="presentation"><a href="subjInsert.html">과목입력</a></li>
+			<li role="presentation"><a href="oMInsert.html">개설학과입력</a></li>
+			<li role="presentation"><a href="oSInsert.html">개설과목입력</a></li>
+			<li role="presentation" class="active"><a href="testInsert.html">기출문제입력</a></li>
+			<li role="presentation"><a href="bInsert.html">보기입력</a></li>
+			<li role="presentation"><a href="tAInsert.html">정답입력</a></li>
+		</ul></p>
+	</div>
+	<div class="col-lg-10 col-lg-offset-1">
+		<form name="pTInsert" action="pTInsert.do" method="post">
+			<table class='table table-striped'>
+				<tr>
+					<th>
+						<select name="yosaSeme" id="yosaSeme" onchange="getYSMcode(), setTable()" class='form-control'>
+							<option value="">개설학년, 학과 선택</option>
+							<option value="20152">2015학년 2학기</option>
+							<option value="20161">2016학년 1학기</option>
+						</select>
+					</th>
+					<th>
+						<select name="mcode" id="mcode" onchange="getYSScode(), setTable()" class='form-control'>
+							<option value=''>학과 선택</option>
+						</select>
+					</th>
+					<th>
+						<select name="grade" id="grade" onchange="getYSScode(), setTable()" class='form-control'>
+							<option value=''>학년</option>
+							<option value='1'>1학년</option>
+							<option value='2'>2학년</option>
+							<option value='3'>3학년</option>
+							<option value='4'>4학년</option>
+						</select>
+					</th>
+					<th>
+						<select name="scode" id="scode" onchange="setTable()" class='form-control'>
+							<option value=''>과목 선택</option>
+						</select>
+					</th>
+					<th>
+						<select name="tyear" id="tyear" class='form-control' onchange="setTable()">
+							<option value=''>기출년도선택</option>
+						</select>
+					</th>
+				</tr>
+			</table>
+			<span id='setform'></span>
+		
+			<table id="ttable" class='table table-striped'>
+			</table>
+		</form>
+		<div class="footer">
+			<div id='btnlo' class="btngrp">
+			</div>
+		</div>			 
+	</div>
+</body>
+</html>

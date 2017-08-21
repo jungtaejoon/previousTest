@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="euc-kr">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>과목입력페이지</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+	<script type="text/javascript">
+		var str = "";
+		$(function(){
+			$('#scode').blur(function() {
+				
+				$.ajax({
+					type:"POST",
+					url:"scodeCheck.do",
+					data:{
+						"scode":$('#scode').val()
+					},
+					success:function(data){
+						str = data;
+						if(data == "YES" && $('#scode').val().length == 5){
+							$('#schk').removeClass("glyphicon glyphicon-remove form-control-feedback");
+							$('#schk').addClass("glyphicon glyphicon-ok form-control-feedback");
+						}
+						else if(data == ''){
+							$('#schk').removeClass("glyphicon glyphicon-ok form-control-feedback");
+							$('#schk').removeClass("glyphicon glyphicon-remove form-control-feedback");
+						}
+						else {
+							$('#schk').removeClass("glyphicon glyphicon-ok form-control-feedback");
+							$('#schk').addClass("glyphicon glyphicon-remove form-control-feedback");
+						}
+					}
+				});
+				
+			});
+		});
+		function getMcode(){
+			$.getJSON("getMcode.do", function(data){
+				var str = "";
+				str += "<option value=''>=== 학과 ===</option>";
+				for (var i=0; i < data.length; i++ ){
+					str  += "<option value='"+data[i].mcode+"'>"+data[i].mname+"</option>";
+				}
+				$("#mcode").html(str);
+				
+			});
+		}
+
+		function resetMcode() {
+			$("#mcode").val("").prop("selected", true);
+			document.getElementById('mcode').disabled = 1;
+		}
+		function submitChk() {
+			$.ajax({
+				type:"POST",
+				url:"scodeCheck.do",
+				data:{
+					"scode":$('#scode').val()
+				},
+				success:function(data){
+					
+					if(data == "NO"){
+						alert('해당 과목코드가 이미 존재합니다.');
+					}
+					else if($('#scode').val() == "") {
+						alert('과목 코드를 입력하세요.');
+					}
+					else if($('#scode').val().length < 5) {
+						alert('과목 코드는 5자리로 입력하세요');
+					}
+					else if($('#sname').val() == "") {
+						alert('과목명을 입력하세요.');
+					}
+					else if($("select[name='morc']").val() == "") {
+						alert('전공 또는 교양 중에서 선택하세요.');
+					}
+					else if($("#fd").is(":checked") && $("#mcode").text() == "") {
+						alert('학과를 선택하세요.');
+					}
+					else document.PSIForm.submit();
+				}
+			});
+		}
+		function checkfc() {
+			$("input:radio[name='morc']:radio[value='2']").prop("checked","checked");
+		}
+		function checkfd() {
+			$("input:radio[name='morc']:radio[value='1']").prop("checked","checked");
+			$("#mcode").val("").prop("selected", true);
+			document.getElementById('mcode').disabled = 0;
+		}
+		function brk() {
+			event.stopPropagation();
+		}
+		function rs() {
+			document.getElementById('mcode').disabled = 0;			
+		}
+	</script>
+</head>
+<body onload="getMcode()">
+	<div class="col-lg-10 col-lg-offset-1">
+		<p><ul class="nav nav-tabs nav-justified">
+			<li role="presentation"><a href="index.html">HOME</a></li>
+			<li role="presentation"><a href="main.html">기출문제풀어보기</a></li>
+			<li role="presentation"><a href="majorInsert.html">학과입력</a></li>
+			<li role="presentation" class="active"><a href="subjInsert.html">과목입력</a></li>
+			<li role="presentation"><a href="oMInsert.html">개설학과입력</a></li>
+			<li role="presentation"><a href="oSInsert.html">개설과목입력</a></li>
+			<li role="presentation"><a href="testInsert.html">기출문제입력</a></li>
+			<li role="presentation"><a href="bInsert.html">보기입력</a></li>
+			<li role="presentation"><a href="tAInsert.html">정답입력</a></li>
+		</ul></p>
+	</div>
+	<div class="col-lg-10 col-lg-offset-1">
+		<form name="PSIForm" action="pSInsert.do" method="post">
+			<div class="col-lg-2">
+				<div class="form-group has-success has-feedback">
+					<label for="scode">과목코드 입력(5자리)</label>
+					<input type="text" name="scode" id="scode" maxlength="5" class='form-control' placeholder="ex) 00500">
+					<span id="schk"></span>
+				</div>
+			</div>
+			<div class="col-lg-6">
+				<div  class="form-group">
+					<label for="mname">과목명 입력(최대 20글자)</label>
+					<input type="text" name="sname" id="sname" maxlength="20" class='form-control' placeholder="ex) 원격대학교육의이해">
+					<span id="te"></span>
+				</div>
+			</div>
+			<div class="col-lg-7">
+				<table class="table table-hover">
+					<tr onclick="checkfd()">
+						<td style="vertical-align:middle">
+							<input type="radio" name="morc" id="fd" value="1">
+							<label for="fd"> 전공</label>
+						</td>
+						<td onclick='brk()'>
+							<select name='mcode' id='mcode' onchange='test()' class='form-control' onclick='brk()'>
+								<option value=''>=== 학과 ===</option>
+							</select>
+						</td>
+					</tr>
+					<tr onclick="checkfc(), resetMcode()">
+						<td colspan="2" style="vertical-align:middle">
+							<input type="radio" name="morc" id="fc" value="2" onclick="resetMcode()">
+							<label for="fc"> 교양</label>
+						</td>
+					</tr>
+				</table>
+			</div>
+			</p>
+			<div class="form-group col-lg-6">
+				<input type="button" value="입력" onclick="submitChk()" class="btn btn-primary">
+				<input type="reset" value="초기화" onclick="rs()" class="btn btn-primary">
+			</div>
+		</form>
+	</div>
+</body>
+</html>
